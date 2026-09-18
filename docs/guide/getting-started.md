@@ -47,6 +47,10 @@ yeet greet app.py world --loud   # function first
 yeet app.py:greet world --loud   # FILE:FUNC
 ```
 
+Hyphens in the name are treated as underscores, so `yeet app.py
+add-item-to-index` and `yeet app.py add_item_to_index` both run
+`add_item_to_index`.
+
 If `main` takes a **string** first argument, a bare `yeet app.py greet` is
 genuinely ambiguous — `greet` could be the function to run *or* a value for
 `main` — so yeetr raises instead of guessing. Disambiguate with
