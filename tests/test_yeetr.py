@@ -1911,6 +1911,52 @@ def test_yeet_cli_file_colon_function(
     assert "ran thing" in capsys.readouterr().out
 
 
+def _write_multiword_func(tmp_path: Path) -> Path:
+    file = tmp_path / "demo.py"
+    file.write_text(
+        "def main() -> None:\n"
+        "    print('main called')\n"
+        "\n"
+        "def add_item_to_index(*, item_id: str) -> None:\n"
+        "    print(f'added {item_id}')\n",
+    )
+    return file
+
+
+def test_yeet_cli_hyphenated_func_after_file(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from yeetr._cli import main as yeet_main
+
+    file = _write_multiword_func(tmp_path)
+    yeet_main([str(file), "add-item-to-index", "--item-id", "x"])
+    assert "added x" in capsys.readouterr().out
+
+
+def test_yeet_cli_hyphenated_func_before_file(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from yeetr._cli import main as yeet_main
+
+    file = _write_multiword_func(tmp_path)
+    # `yeet FUNC FILE` — the form a `#!yeet add-item-to-index` shebang produces.
+    yeet_main(["add-item-to-index", str(file), "--item-id", "x"])
+    assert "added x" in capsys.readouterr().out
+
+
+def test_yeet_cli_hyphenated_file_colon_func(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from yeetr._cli import main as yeet_main
+
+    file = _write_multiword_func(tmp_path)
+    yeet_main([f"{file}:add-item-to-index", "--item-id", "x"])
+    assert "added x" in capsys.readouterr().out
+
+
 def test_yeet_cli_non_function_main_rejected(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
