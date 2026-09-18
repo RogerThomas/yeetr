@@ -158,11 +158,15 @@ def main(argv: list[str] | None = None) -> None:
     file_arg, *rest = raw
     if not file_arg.endswith(".py") and rest and rest[0].endswith(".py"):
         explicit_func, file_arg, *rest = raw
+        explicit_func = explicit_func.replace("-", "_")
 
     # `FILE.py:FUNC` — split on the last colon so Windows drive letters survive.
+    # FUNC may be written with hyphens (e.g. `add-item-to-index`); normalize to
+    # underscores since that's what the actual Python identifier looks like.
     head, sep, tail = file_arg.rpartition(":")
-    if sep and head.endswith(".py") and tail.isidentifier():
-        file_arg, explicit_func = head, tail
+    tail_normalized = tail.replace("-", "_")
+    if sep and head.endswith(".py") and tail_normalized.isidentifier():
+        file_arg, explicit_func = head, tail_normalized
 
     path = Path(file_arg).resolve()
     if not path.is_file():
@@ -173,7 +177,7 @@ def main(argv: list[str] | None = None) -> None:
 
     func_name = explicit_func or "main"
     if explicit_func is None and rest and not rest[0].startswith("-"):
-        candidate = rest[0]
+        candidate = rest[0].replace("-", "_")
         if _is_public_local_function(module.__name__, candidate, getattr(module, candidate, None)):
             if candidate != "main" and _main_accepts_string_positional(module):
                 _print_error(

@@ -19,6 +19,8 @@ from rich.logging import RichHandler
 
 import yeetr
 from yeetr import Arg, Opt, YeetrError
+from yeetr._cli import main as yeet_main
+from yeetr._runner import _build_parser  # pyright: ignore[reportPrivateUsage]
 
 
 @pytest.fixture(autouse=True)
@@ -187,8 +189,6 @@ def test_enum_help_shows_choices() -> None:
     from io import StringIO
 
     from rich.console import Console
-
-    from yeetr._runner import _build_parser  # pyright: ignore[reportPrivateUsage]
 
     def main(*, format: _Format = _Format.JSON) -> None:
         del format
@@ -901,8 +901,6 @@ def test_type_alias_help_renders_inner_type() -> None:
 
     from rich.console import Console
 
-    from yeetr._runner import _build_parser  # pyright: ignore[reportPrivateUsage]
-
     def main(*, workers: _Workers = 4) -> None:
         del workers
 
@@ -1210,8 +1208,6 @@ def test_envvar_shown_in_help() -> None:
 
     from rich.console import Console
 
-    from yeetr._runner import _build_parser  # pyright: ignore[reportPrivateUsage]
-
     def main(*, workers: Annotated[int, Opt(envvar="WORKERS")] = 4) -> None:
         del workers
 
@@ -1237,8 +1233,6 @@ def test_hidden_option_absent_from_help() -> None:
     from io import StringIO
 
     from rich.console import Console
-
-    from yeetr._runner import _build_parser  # pyright: ignore[reportPrivateUsage]
 
     def main(*, debug: Annotated[bool, Opt(hidden=True)] = False, workers: int = 4) -> None:
         del debug, workers
@@ -1647,8 +1641,6 @@ def _write_demo(tmp_path: Path) -> Path:
 
 
 def test_yeet_cli_defaults_to_main(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = _write_demo(tmp_path)
     yeet_main([str(file), "5", "-n", "0.2"])
     out = capsys.readouterr().out
@@ -1656,8 +1648,6 @@ def test_yeet_cli_defaults_to_main(tmp_path: Path, capsys: pytest.CaptureFixture
 
 
 def test_yeet_cli_explicit_func(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = _write_demo(tmp_path)
     yeet_main([str(file), "greet", "world", "--loud"])
     out = capsys.readouterr().out
@@ -1668,8 +1658,6 @@ def test_yeet_cli_missing_python_file_scaffolds(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = tmp_path / "nope.py"
     yeet_main([str(file)])
 
@@ -1694,8 +1682,6 @@ def test_yeet_cli_missing_non_python_file_errors(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     with pytest.raises(SystemExit) as exc:
         yeet_main([str(tmp_path / "nope.txt")])
     assert exc.value.code == 2
@@ -1707,8 +1693,6 @@ def test_yeet_cli_missing_parent_directory_errors(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = tmp_path / "missing" / "demo.py"
     with pytest.raises(SystemExit) as exc:
         yeet_main([str(file)])
@@ -1718,8 +1702,6 @@ def test_yeet_cli_missing_parent_directory_errors(
 
 
 def test_yeet_cli_no_args_prints_usage(capsys: pytest.CaptureFixture[str]) -> None:
-    from yeetr._cli import main as yeet_main
-
     with pytest.raises(SystemExit) as exc:
         yeet_main([])
     assert exc.value.code == 2
@@ -1728,8 +1710,6 @@ def test_yeet_cli_no_args_prints_usage(capsys: pytest.CaptureFixture[str]) -> No
 
 
 def test_yeet_cli_help(capsys: pytest.CaptureFixture[str]) -> None:
-    from yeetr._cli import main as yeet_main
-
     with pytest.raises(SystemExit) as exc:
         yeet_main(["--help"])
     assert exc.value.code == 0
@@ -1741,8 +1721,6 @@ def test_yeet_cli_forwards_help_to_target(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = _write_demo(tmp_path)
     with pytest.raises(SystemExit):
         yeet_main([str(file), "--help"])
@@ -1756,8 +1734,6 @@ def test_yeet_cli_loads_imports_from_target_directory(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     package_dir = tmp_path / "project"
     package_dir.mkdir()
     (package_dir / "scraper.py").write_text("VALUE = 'loaded'\n")
@@ -1775,8 +1751,6 @@ def test_yeet_cli_errors_when_target_function_missing(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = tmp_path / "demo.py"
     file.write_text("VALUE = 1\n")
     with pytest.raises(SystemExit) as exc:
@@ -1790,8 +1764,6 @@ def test_yeet_cli_errors_when_named_attribute_is_not_callable(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = tmp_path / "demo.py"
     file.write_text("thing = 1\n")
     with pytest.raises(SystemExit) as exc:
@@ -1805,8 +1777,6 @@ def test_yeet_cli_keeps_non_callable_candidate_as_argument(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = tmp_path / "demo.py"
     file.write_text(
         "thing = 1\n\ndef main(name: str) -> None:\n    print(name)\n",
@@ -1832,8 +1802,6 @@ def test_yeet_cli_ambiguous_function_and_str_main_errors(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = _write_thing_and_str_main(tmp_path)
     with pytest.raises(SystemExit) as exc:
         yeet_main([str(file), "thing"])
@@ -1845,8 +1813,6 @@ def test_yeet_cli_explicit_main_escapes_ambiguity(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = _write_thing_and_str_main(tmp_path)
     yeet_main([str(file), "main", "thing"])
     assert "main got 'thing'" in capsys.readouterr().out
@@ -1856,8 +1822,6 @@ def test_yeet_cli_imported_callable_is_not_dispatched(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = tmp_path / "demo.py"
     file.write_text(
         "from logging import getLogger\n"
@@ -1874,8 +1838,6 @@ def test_yeet_cli_private_function_is_not_dispatched(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = tmp_path / "demo.py"
     file.write_text(
         "def _secret() -> None:\n"
@@ -1892,8 +1854,6 @@ def test_yeet_cli_function_before_file(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = _write_thing_and_str_main(tmp_path)
     # `yeet FUNC FILE` — the form a `#!yeet thing` shebang produces.
     yeet_main(["thing", str(file)])
@@ -1904,19 +1864,55 @@ def test_yeet_cli_file_colon_function(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = _write_thing_and_str_main(tmp_path)
     yeet_main([f"{file}:thing"])
     assert "ran thing" in capsys.readouterr().out
+
+
+def _write_multiword_func(tmp_path: Path) -> Path:
+    file = tmp_path / "demo.py"
+    file.write_text(
+        "def main() -> None:\n"
+        "    print('main called')\n"
+        "\n"
+        "def add_item_to_index(*, item_id: str) -> None:\n"
+        "    print(f'added {item_id}')\n",
+    )
+    return file
+
+
+def test_yeet_cli_hyphenated_func_after_file(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    file = _write_multiword_func(tmp_path)
+    yeet_main([str(file), "add-item-to-index", "--item-id", "x"])
+    assert "added x" in capsys.readouterr().out
+
+
+def test_yeet_cli_hyphenated_func_before_file(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    file = _write_multiword_func(tmp_path)
+    # `yeet FUNC FILE` — the form a `#!yeet add-item-to-index` shebang produces.
+    yeet_main(["add-item-to-index", str(file), "--item-id", "x"])
+    assert "added x" in capsys.readouterr().out
+
+
+def test_yeet_cli_hyphenated_file_colon_func(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    file = _write_multiword_func(tmp_path)
+    yeet_main([f"{file}:add-item-to-index", "--item-id", "x"])
+    assert "added x" in capsys.readouterr().out
 
 
 def test_yeet_cli_non_function_main_rejected(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = tmp_path / "demo.py"
     file.write_text("class main:\n    pass\n")
     with pytest.raises(SystemExit) as exc:
@@ -1929,8 +1925,6 @@ def test_yeet_cli_optional_str_main_is_ambiguous(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = tmp_path / "demo.py"
     file.write_text(
         "def thing() -> None:\n"
@@ -1949,8 +1943,6 @@ def test_yeet_cli_dispatches_function_when_main_missing(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = tmp_path / "demo.py"
     file.write_text("def thing() -> None:\n    print('ran thing')\n")
     yeet_main([str(file), "thing"])
@@ -1961,8 +1953,6 @@ def test_yeet_cli_unresolvable_main_hints_not_ambiguous(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = tmp_path / "demo.py"
     file.write_text(
         "def thing() -> None:\n"
@@ -1979,8 +1969,6 @@ def test_yeet_cli_keyword_only_main_not_ambiguous(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = tmp_path / "demo.py"
     file.write_text(
         "def thing() -> None:\n"
@@ -1997,8 +1985,6 @@ def test_yeet_cli_var_keyword_main_not_ambiguous(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = tmp_path / "demo.py"
     file.write_text(
         "def thing() -> None:\n"
@@ -2015,8 +2001,6 @@ def test_yeet_cli_zero_param_main_not_ambiguous(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from yeetr._cli import main as yeet_main
-
     file = tmp_path / "demo.py"
     file.write_text(
         "def thing() -> None:\n"
