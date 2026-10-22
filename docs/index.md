@@ -42,7 +42,7 @@ CLI command: `yeet`
 
 ## Install
 
-Requires Python 3.13 or 3.14.
+Requires Python 3.13, 3.14, or 3.15.
 
 ```bash
 uv add yeetr

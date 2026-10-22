@@ -29,7 +29,7 @@
 
 # yeetr
 
-A tiny, typed, signature-driven CLI runner. Supports Python 3.13 and 3.14.
+A tiny, typed, signature-driven CLI runner. Supports Python 3.13, 3.14, and 3.15.
 
 > No decorators.
 > No command classes.

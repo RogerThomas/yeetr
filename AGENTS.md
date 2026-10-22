@@ -30,7 +30,7 @@
 
 ## Conventions
 
-- Python 3.13+ (tested on 3.13 and 3.14), strict Pyright, ruff line-length 100.
+- Python 3.13+ (tested on 3.13, 3.14, and 3.15), strict Pyright, ruff line-length 100.
 - Follow `style-guide.md`. Notably: prefer `@dataclass`, place private functions before callers, don't test private functions, avoid module-level globals.
 - No comments unless explicitly requested.
 - Keep the public API surface minimal — only `Arg`, `Opt`, `YeetrError`, and `run` are exported from `yeetr`.
