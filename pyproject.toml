@@ -42,6 +42,7 @@ dev = [
     "prek>=0.4.1",
     "pylint>=3.3.8",
     "zensical>=0.0.45",
+    "git-cliff>=2.14.2",
 ]
 
 [build-system]

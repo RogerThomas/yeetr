@@ -8,8 +8,10 @@ import decimal
 import enum
 import logging
 import stat
+import sys
+import types
 import uuid
-from collections.abc import Iterator
+from collections.abc import Coroutine, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Annotated, Literal, NamedTuple
@@ -597,6 +599,35 @@ def test_async_main() -> None:
     result = yeetr.run(main, argv=["Roger", "--loud"])
     assert captured == {"name": "Roger", "loud": True}
     assert result == "ROGER"
+
+
+def test_async_main_exception_is_not_chained() -> None:
+    async def main() -> None:
+        await asyncio.sleep(0)
+        raise ValueError("boom")
+
+    with pytest.raises(ValueError, match="boom") as exc_info:
+        yeetr.run(main, argv=[])
+    assert exc_info.value.__context__ is None
+
+
+def test_async_main_uses_uvloop_when_installed(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[str] = []
+
+    def fake_run(coro: Coroutine[object, object, str]) -> str:
+        calls.append("uvloop")
+        return asyncio.run(coro)
+
+    fake_uvloop = types.ModuleType("uvloop")
+    monkeypatch.setattr(fake_uvloop, "run", fake_run, raising=False)
+    monkeypatch.setitem(sys.modules, "uvloop", fake_uvloop)
+
+    async def main(name: str) -> str:
+        await asyncio.sleep(0)
+        return name
+
+    assert yeetr.run(main, argv=["Roger"]) == "Roger"
+    assert calls == ["uvloop"]
 
 
 def test_kebab_case_conversion() -> None:

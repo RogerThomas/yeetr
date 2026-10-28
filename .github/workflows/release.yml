@@ -1,10 +1,14 @@
 name: release
 
-# Manually dispatched (via `task release`, or the Actions tab). Runs entirely
-# in CI. A release is a pushed CalVer *tag* — never a commit to `main` — so it
+# Runs when the release PR (release/next, see release-pr.yml) is merged, or
+# when manually dispatched (via `task release`, or the Actions tab). Runs
+# entirely in CI. A release is a pushed CalVer *tag* — never a commit to `main` — so it
 # never fights branch protection, and the git tag is the sole source of the
 # published version (see hatch-vcs config in pyproject.toml).
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       version:
@@ -17,6 +21,7 @@ jobs:
   # Gate: identical checks to every PR (shared definition), so a broken commit
   # can never be released.
   checks:
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '/release/next') }}
     uses: ./.github/workflows/checks.yml
     permissions:
       contents: read
@@ -40,7 +45,7 @@ jobs:
       - name: Check out
         uses: actions/checkout@v7
         with:
-          ref: main
+          ref: ${{ github.sha }}
           fetch-depth: 0   # full history + all tags for version derivation
 
       - name: Set up the environment
@@ -50,11 +55,15 @@ jobs:
         id: cut
         env:
           GH_TOKEN: ${{ github.token }}
+          HEAD_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           set -eu
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           version="${{ github.event.inputs.version }}"
+          if [ "${{ github.event_name }}" = push ]; then
+            version="$(printf '%s\n' "$HEAD_COMMIT_MESSAGE" | sed -n 's/^Release //p')"
+          fi
           version="${version:-$(uv run yeet scripts/next_version.py)}"
           if git rev-parse -q --verify "refs/tags/$version" >/dev/null; then
             echo "::error::tag $version already exists"
@@ -77,8 +86,9 @@ jobs:
         run: |
           set -eu
           version="${{ steps.cut.outputs.version }}"
+          uv run git-cliff --latest --strip header --output release-notes.md
           git push origin "refs/tags/$version"
-          gh release create "$version" --verify-tag --title "$version" --generate-notes
+          gh release create "$version" --verify-tag --title "$version" --notes-file release-notes.md
 
   deploy-docs:
     needs: release

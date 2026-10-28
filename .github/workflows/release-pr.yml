@@ -1,0 +1,50 @@
+name: release-pr
+
+# Keeps a "Release <version>" PR (branch release/next) open against main with
+# the regenerated CHANGELOG.md. Merging it triggers release.yml. The PR is
+# pushed with GITHUB_TOKEN, so the required checks don't run on it: merge it
+# with the admin bypass (release.yml runs the same checks before publishing).
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release-pr:
+    if: ${{ !contains(github.event.head_commit.message, '/release/next') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0   # full history + all tags for the changelog
+
+      - name: Set up the environment
+        uses: ./.github/actions/setup-python-env
+
+      - name: Update the release PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          version="$(uv run yeet ./scripts/next_version.py)"
+          uv run git-cliff --unreleased --tag "$version" --strip header --output notes.md
+          if [ ! -s notes.md ]; then
+            echo "No unreleased PRs."
+            exit 0
+          fi
+          uv run git-cliff --tag "$version" --output CHANGELOG.md
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C release/next
+          git add CHANGELOG.md
+          git commit -m "Release $version"
+          git push --force origin release/next
+          if [ "$(gh pr view release/next --json state --jq .state 2>/dev/null)" = OPEN ]; then
+            gh pr edit release/next --title "Release $version" --body-file notes.md
+          else
+            gh pr create --base main --head release/next --title "Release $version" --body-file notes.md
+          fi
