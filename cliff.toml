@@ -1,6 +1,13 @@
 [changelog]
+header = "# Changelog\n"
 body = """
-{%- for group, commits in commits | group_by(attribute="group") %}
+{%- if commits %}
+{%- if previous and previous.version %}
+## [{{ version }}](https://github.com/RogerThomas/yeetr/compare/{{ previous.version }}...{{ version }}) - {{ timestamp | date(format="%Y-%m-%d") }}
+{%- else %}
+## {{ version }} - {{ timestamp | date(format="%Y-%m-%d") }}
+{%- endif %}
+{% for group, commits in commits | group_by(attribute="group") %}
 ### {{ group }}
 {% for commit in commits -%}
 {%- set lines = commit.message | split(pat="\n") -%}
@@ -9,11 +16,13 @@ body = """
 * {{ title | default(value=lines | first) }} ([#{{ pr }}](https://github.com/RogerThomas/yeetr/pull/{{ pr }}))
 {% endfor %}
 {%- endfor %}
-{%- if previous and previous.version %}
-**Full Changelog**: https://github.com/RogerThomas/yeetr/compare/{{ previous.version }}...{{ version }}
-{%- endif %}
+{% endif %}
 """
 trim = true
+postprocessors = [
+  { pattern = "\\n{3,}", replace = "\n\n" },
+  { pattern = "\\n+$", replace = "\n" },
+]
 
 [git]
 conventional_commits = false
@@ -21,6 +30,7 @@ filter_unconventional = false
 filter_commits = true
 tag_pattern = "^[0-9]{4}\\.[0-9]+\\.[0-9]+"
 commit_parsers = [
+  { message = "^Merge pull request #[0-9]+ from \\S+/release/next", skip = true },
   { message = "^Merge pull request #[0-9]+ from \\S+/dependabot/", group = "Dependencies" },
   { message = "^Merge pull request #[0-9]+ from ", group = "Changes" },
   { message = ".*", skip = true },
