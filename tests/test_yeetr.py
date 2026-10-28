@@ -599,6 +599,16 @@ def test_async_main() -> None:
     assert result == "ROGER"
 
 
+def test_async_main_exception_is_not_chained() -> None:
+    async def main() -> None:
+        await asyncio.sleep(0)
+        raise ValueError("boom")
+
+    with pytest.raises(ValueError, match="boom") as exc_info:
+        yeetr.run(main, argv=[])
+    assert exc_info.value.__context__ is None
+
+
 def test_kebab_case_conversion() -> None:
     captured: dict[str, object] = {}
 

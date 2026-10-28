@@ -1441,5 +1441,7 @@ def _run_coroutine(coro: Any) -> Any:
     try:
         import uvloop  # pyright: ignore[reportMissingImports]  # pylint: disable=import-outside-toplevel
     except ImportError:
+        uvloop = None
+    if uvloop is None:
         return asyncio.run(coro)
     return uvloop.run(coro)  # pyright: ignore[reportUnknownMemberType, reportUnknownVariableType]
