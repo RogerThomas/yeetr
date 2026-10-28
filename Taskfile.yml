@@ -57,6 +57,11 @@ tasks:
       - task: build
       - task: publish
 
+  changelog:
+    desc: Preview the release notes git-cliff will generate for the next release
+    cmds:
+      - uv run git-cliff --unreleased --tag "$(uv run yeet ./scripts/next_version.py)"
+
   release:
     desc: 'Trigger the release workflow on GitHub (CI bumps CalVer, publishes to PyPI, and deploys docs). Nothing runs locally. Usage: task release [-- VERSION]'
     cmds:

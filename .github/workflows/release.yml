@@ -77,8 +77,9 @@ jobs:
         run: |
           set -eu
           version="${{ steps.cut.outputs.version }}"
+          uv run git-cliff --latest --output release-notes.md
           git push origin "refs/tags/$version"
-          gh release create "$version" --verify-tag --title "$version" --generate-notes
+          gh release create "$version" --verify-tag --title "$version" --notes-file release-notes.md
 
   deploy-docs:
     needs: release
