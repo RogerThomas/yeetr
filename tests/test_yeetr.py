@@ -1778,6 +1778,28 @@ def test_yeet_cli_loads_imports_from_target_directory(
     assert "loaded" in out
 
 
+def test_yeet_cli_spawned_process_can_run_script_function(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "path", [*sys.path])
+    file = tmp_path / "demo.py"
+    file.write_text(
+        "import multiprocessing\n"
+        "from pathlib import Path\n"
+        "\n"
+        "def work() -> None:\n"
+        "    Path(__file__).with_name('out.txt').write_text('worker-ran')\n"
+        "\n"
+        "def main() -> None:\n"
+        "    process = multiprocessing.get_context('spawn').Process(target=work)\n"
+        "    process.start()\n"
+        "    process.join()\n",
+    )
+    yeet_main([str(file)])
+    assert (tmp_path / "out.txt").read_text() == "worker-ran"
+
+
 def test_yeet_cli_errors_when_target_function_missing(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
