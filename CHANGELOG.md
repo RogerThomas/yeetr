@@ -1,5 +1,10 @@
 # Changelog
 
+## [2026.10.29](https://github.com/RogerThomas/yeetr/compare/2026.10.28...2026.10.29) - 2026-10-29
+
+### Changes
+* Keep the script's folder on sys.path for the whole run ([#67](https://github.com/RogerThomas/yeetr/pull/67))
+
 ## [2026.10.28](https://github.com/RogerThomas/yeetr/compare/2026.9.18...2026.10.28) - 2026-10-28
 
 ### Changes
