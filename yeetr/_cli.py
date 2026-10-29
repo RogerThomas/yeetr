@@ -85,8 +85,6 @@ def _load_module(path: Path) -> types.ModuleType:
         with suppress(KeyError):
             del sys.modules[spec.name]
         raise
-    finally:
-        del sys.path[0]
     return module
 
 
