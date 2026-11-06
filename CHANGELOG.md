@@ -1,5 +1,10 @@
 # Changelog
 
+## [2026.11.6](https://github.com/RogerThomas/yeetr/compare/2026.10.29...2026.11.6) - 2026-11-06
+
+### Dependencies
+* chore(deps-dev): bump the python-dependencies group across 1 directory with 5 updates ([#70](https://github.com/RogerThomas/yeetr/pull/70))
+
 ## [2026.10.29](https://github.com/RogerThomas/yeetr/compare/2026.10.28...2026.10.29) - 2026-10-29
 
 ### Changes
